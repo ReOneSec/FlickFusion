@@ -1,9 +1,10 @@
 from peewee import *
+from playhouse.db_url import connect
 from config import DATABASE_URL
 import datetime
 
-# Database connection
-db = SqliteDatabase(DATABASE_URL)
+# Database connection using peewee's URL parser
+db = connect(DATABASE_URL or 'sqlite:///movies.db')  # Fallback to SQLite if DATABASE_URL not set
 
 class BaseModel(Model):
     class Meta:
@@ -31,6 +32,7 @@ class RequestLog(BaseModel):
 
 def initialize_db():
     """Initialize the database and create tables if they don't exist."""
-    db.connect()
+    db.connect(reuse_if_open=True)
     db.create_tables([Movie, RequestLog], safe=True)
     return db
+    
