@@ -16,6 +16,10 @@ async def handle_movie_request(update: Update, context: ContextTypes.DEFAULT_TYP
     title, year = parse_movie_title(update.message.text)
     
     try:
+        # Ensure database connection is open
+        if db.is_closed():
+            db.connect()
+            
         # Try to find the movie in the database
         query = Movie.select()
         
@@ -48,6 +52,10 @@ async def handle_movie_request(update: Update, context: ContextTypes.DEFAULT_TYP
             f"Sorry, I couldn't find the movie '{title}'" + (f" ({year})" if year else "") + 
             " in my database. Please check the title or try another movie."
         )
+    finally:
+        # Close the database connection to prevent connection leaks
+        if not db.is_closed():
+            db.close()
 
 async def search_movie(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Search for movies in the database."""
