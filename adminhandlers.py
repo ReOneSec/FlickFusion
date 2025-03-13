@@ -123,14 +123,23 @@ async def confirm_add_movie(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await query.edit_message_text("Movie addition cancelled.")
         return ConversationHandler.END
     
+    # Debug information
+    title = context.user_data['movie_title']
+    year = context.user_data.get('movie_year')
+    message_id = context.user_data['message_id']
+    user_id = update.effective_user.id
+    
+    # Log details for debugging
+    logging.info(f"Adding movie: '{title}' ({year}) with message_id={message_id}, added_by={user_id}")
+    
     # Add movie to database
     try:
         movie = Movie.create(
-            title=context.user_data['movie_title'],
-            year=context.user_data.get('movie_year'),
+            title=title,
+            year=year,
             description=context.user_data.get('movie_description'),
-            message_id=context.user_data['message_id'],
-            added_by=update.effective_user.id
+            message_id=message_id,
+            added_by=user_id
         )
         
         await query.edit_message_text(
@@ -139,12 +148,30 @@ async def confirm_add_movie(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             parse_mode='Markdown'
         )
         
-    except IntegrityError:
+    except IntegrityError as e:
+        logging.error(f"IntegrityError adding movie: {str(e)}")
         await query.edit_message_text(
             "Error: This movie or message ID already exists in the database."
         )
+    except Exception as e:
+        # Comprehensive error handling
+        error_message = str(e)
+        logging.error(f"Error adding movie: {error_message}")
+        
+        # Provide a user-friendly error message
+        if "out of range" in error_message.lower():
+            await query.edit_message_text(
+                "Error: One of the values (likely the message ID) is too large for the database. "
+                "Please contact the administrator to fix this issue."
+            )
+        else:
+            await query.edit_message_text(
+                f"Error adding movie: {error_message}\n"
+                "Please try again or contact the administrator."
+            )
     
     return ConversationHandler.END
+
 
 async def cancel_add_movie(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancel the add movie conversation."""
