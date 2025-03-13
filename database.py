@@ -1,10 +1,21 @@
 from peewee import *
-from playhouse.db_url import connect
 from config import DATABASE_URL
 import datetime
+import logging
 
-# Database connection using peewee's URL parser
-db = connect(DATABASE_URL or 'sqlite:///movies.db')  # Fallback to SQLite if DATABASE_URL not set
+# Set up logging
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Database connection
+# Determine database type based on URL
+if DATABASE_URL.endswith('.db'):
+    db = SqliteDatabase(DATABASE_URL)
+    logger.info(f"Using SQLite database: {DATABASE_URL}")
+else:
+    db = PostgresqlDatabase(DATABASE_URL)
+    logger.info(f"Using PostgreSQL database: {DATABASE_URL}")
 
 class BaseModel(Model):
     class Meta:
@@ -14,8 +25,10 @@ class Movie(BaseModel):
     title = CharField(max_length=200)
     year = IntegerField(null=True)
     description = TextField(null=True)
-    message_id = IntegerField(unique=True)
-    added_by = IntegerField()
+    # Change to BigIntegerField for Telegram message IDs
+    message_id = BigIntegerField(unique=True)
+    # Change to BigIntegerField for Telegram user IDs
+    added_by = BigIntegerField()
     added_at = DateTimeField(default=datetime.datetime.now)
     
     class Meta:
@@ -25,14 +38,17 @@ class Movie(BaseModel):
         )
 
 class RequestLog(BaseModel):
-    user_id = IntegerField()
+    # Change to BigIntegerField for Telegram user IDs
+    user_id = BigIntegerField()
     movie_id = ForeignKeyField(Movie, backref='requests')
     request_time = DateTimeField(default=datetime.datetime.now)
-    group_id = IntegerField(null=True)
+    # Change to BigIntegerField for Telegram group IDs
+    group_id = BigIntegerField(null=True)
 
 def initialize_db():
     """Initialize the database and create tables if they don't exist."""
-    db.connect(reuse_if_open=True)
+    db.connect()
     db.create_tables([Movie, RequestLog], safe=True)
+    logger.info("Database initialized with tables: Movie, RequestLog")
     return db
     
