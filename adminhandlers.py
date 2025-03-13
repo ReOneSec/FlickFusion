@@ -67,8 +67,27 @@ async def description_received(update: Update, context: ContextTypes.DEFAULT_TYP
 async def message_id_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Process the message ID."""
     try:
-        message_id = int(update.message.text.strip())
+        # Parse and validate the message ID
+        text = update.message.text.strip()
+        
+        try:
+            message_id = int(text)
+        except ValueError:
+            await update.message.reply_text(
+                "Please provide a valid numeric message ID, or use /cancel to abort."
+            )
+            return MESSAGE_ID
+        
+        # Check if the message ID is within reasonable range
+        if message_id <= 0:
+            await update.message.reply_text(
+                "Message ID must be a positive number. Please try again, or use /cancel to abort."
+            )
+            return MESSAGE_ID
+        
+        # Store the message ID
         context.user_data['message_id'] = message_id
+        logging.info(f"Validating message ID: {message_id}")
         
         # Try to verify the message exists in the channel
         try:
@@ -77,7 +96,10 @@ async def message_id_received(update: Update, context: ContextTypes.DEFAULT_TYPE
                 from_chat_id=CHANNEL_ID,
                 message_id=message_id
             )
-            await message.delete()  # Delete the forwarded message to keep chat clean
+            
+            # Message found, delete the forwarded copy to keep chat clean
+            await message.delete()
+            logging.info(f"Successfully verified message ID: {message_id}")
             
             # Show confirmation
             title = context.user_data['movie_title']
@@ -102,15 +124,19 @@ async def message_id_received(update: Update, context: ContextTypes.DEFAULT_TYPE
             return CONFIRM
             
         except Exception as e:
+            error_message = str(e)
+            logging.error(f"Error verifying message ID {message_id}: {error_message}")
+            
             await update.message.reply_text(
                 f"Error: Could not find message with ID {message_id} in the channel.\n"
                 "Please check the ID and try again, or use /cancel to abort."
             )
             return MESSAGE_ID
             
-    except ValueError:
+    except Exception as e:
+        logging.error(f"Unexpected error processing message ID: {str(e)}")
         await update.message.reply_text(
-            "Please provide a valid numeric message ID, or use /cancel to abort."
+            "An unexpected error occurred. Please try again or use /cancel to abort."
         )
         return MESSAGE_ID
 
