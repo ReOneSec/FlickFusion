@@ -23,11 +23,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             photo="https://i.ibb.co/N6b3MVpj/1741892600514.jpg",
             caption=(
-                "🎬 Welcome to FlickFusion, Movie Lover! 🍿\n\n"
-                "Hey there! I'm FlickFusion, your go-to bot for instant movie magic. 🪄 "
+                "**🎬 Welcome to FlickFusion, Movie Lover! 🍿**\n\n"
+                "Hey there! I'm **FlickFusion**, your go-to bot for instant movie magic. 🪄 "
                 "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
-                "Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥\n\n"
-                "Crafted with ❤️ by @ViperROX.\n"
+                "__**Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥**__\n\n"
+                "**Crafted with ❤️ by @ViperROX.**\n"
                 "Have questions? Just type /help !"
             ),
             parse_mode='Markdown'
