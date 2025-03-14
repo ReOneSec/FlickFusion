@@ -1,17 +1,17 @@
 import logging
 from telegram import Update
-from telegram.ext import Application, MessageHandler, filters, CommandHandler, ContextTypes
+from telegram.ext import Application, MessageHandler, filters, CommandHandler, ContextTypes, CallbackQueryHandler  # Added CallbackQueryHandler
 from config import BOT_TOKEN
 from database import initialize_db
 from adminhandlers import add_movie_handler, list_movies_handler, delete_movie_handler
-from userhandlers import handle_movie_request, search_movie
+from userhandlers import handle_movie_request, search_movie, get_movie, get_movie_callback  # Added get_movie and get_movie_callback
 
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-logger = logging.getLogger(__name__)  # Fixed: Changed from 'name' to '__name__'
+logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a welcome message with image when the command /start is issued."""
@@ -83,6 +83,10 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("search", search_movie))
+    application.add_handler(CommandHandler("get", get_movie))  # Added CommandHandler for /get
+    
+    # Add callback handler for movie selection buttons
+    application.add_handler(CallbackQueryHandler(get_movie_callback, pattern=r'^get_movie_'))  # Added CallbackQueryHandler
     
     # Admin handlers
     application.add_handler(add_movie_handler)
@@ -100,5 +104,6 @@ def main():
     # Close the database connection when done
     db.close()
 
-if __name__ == '__main__':  # Fixed: Changed from 'name' to '__name__'
+if __name__ == '__main__':
     main()
+    
