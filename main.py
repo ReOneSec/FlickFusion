@@ -26,7 +26,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
                 "Hey there! I'm *FlickFusion*, your go-to bot for instant movie magic. 🪄 "
                 "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
-                "_*Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥*_\n\n"
+                "*_Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥_*\n\n"
                 "*Crafted with ❤️ by @ViperROX.*\n"
                 "Have questions? Just type /help !"
             ),
@@ -40,7 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
             "Hey there! I'm *FlickFusion*, your go-to bot for instant movie magic. 🪄 "
             "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
-            "_*Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥*_\n\n"
+            "*_Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥_*\n\n"
             "*Crafted with ❤️ by @ViperROX.*\n"
             "Have questions? Just type /help !",
             parse_mode='Markdown'
