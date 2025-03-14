@@ -52,6 +52,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🎬 *FlickFusion Help Guide* 🍿\n\n"
         "*For Movie Lovers:*\n"
         "• `/search [movie title]` - Find movies by title\n"
+        "• `/get <title> [year]` - Get a specific movie\n"
+        "• `/get` - Get a random movie\n"
         "• Type a movie title to request it (e.g., `Inception (2010)`)\n"
         "• `/start` - See the welcome message\n"
         "• `/help` - Show this help guide\n\n"
