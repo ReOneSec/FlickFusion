@@ -6,9 +6,11 @@ from database import Movie, RequestLog
 from utils import parse_movie_title, is_authorized_group, format_movie_info
 from config import CHANNEL_ID, AUTH_GROUPS
 from peewee import DoesNotExist
+from forcejoin import require_membership  
 
 logger = logging.getLogger(__name__)
 
+@require_membership  # Add this decorator
 async def handle_movie_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle user movie requests by title."""
     # Check if message is from an authorized group
