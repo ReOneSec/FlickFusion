@@ -258,7 +258,7 @@ async def check_membership_callback(update: Update, context: ContextTypes.DEFAUL
         try:
             # Try to edit the caption if it's a photo message
             await query.edit_message_caption(
-                caption=""*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
+                caption="*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
                 "Hey there! I'm *FlickFusion*, your go-to bot for instant movie magic. 🪄 "
                 "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
                 "*Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥*\n\n"
@@ -269,7 +269,7 @@ async def check_membership_callback(update: Update, context: ContextTypes.DEFAUL
         except Exception:
             # Fallback to editing text message
             await query.edit_message_text(
-                ""*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
+                "*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
                 "Hey there! I'm *FlickFusion*, your go-to bot for instant movie magic. 🪄 "
                 "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
                 "*Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥*\n\n"
