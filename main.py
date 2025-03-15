@@ -300,8 +300,11 @@ def main():
         application.add_handler(CommandHandler("search", search_movie))
         application.add_handler(CommandHandler("get", get_movie))
         application.add_handler(CommandHandler("status", membership_status))
-        application.add_handler(CommandHandler("stat", stat_command))  # Add this line
+        application.add_handler(CommandHandler("stat", stat_command))
         application.add_handler(CommandHandler("checkmemberships", check_memberships_command))
+        
+        # Add the broadcast handler
+        application.add_handler(broadcast_handler)
         
         # Add callback handlers
         application.add_handler(CallbackQueryHandler(get_movie_callback, pattern=r'^get_movie_'))
