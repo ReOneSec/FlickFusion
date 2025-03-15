@@ -159,46 +159,53 @@ async def prepare_broadcast_confirmation(update: Update, context: ContextTypes.D
     ]
     
     # Send preview based on media type
-    if broadcast_type == "photo":
-        file_id = context.user_data.get('media_file_id', '')
-        caption = context.user_data.get('broadcast_caption', '')
-        
-        await update.message.reply_photo(
-            photo=file_id,
-            caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
+    try:
+        if broadcast_type == "photo":
+            file_id = context.user_data.get('media_file_id', '')
+            caption = context.user_data.get('broadcast_caption', '')
+            
+            await update.message.reply_photo(
+                photo=file_id,
+                caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
+        elif broadcast_type == "video":
+            file_id = context.user_data.get('media_file_id', '')
+            caption = context.user_data.get('broadcast_caption', '')
+            
+            await update.message.reply_video(
+                video=file_id,
+                caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
+        elif broadcast_type == "document":
+            file_id = context.user_data.get('media_file_id', '')
+            caption = context.user_data.get('broadcast_caption', '')
+            
+            await update.message.reply_document(
+                document=file_id,
+                caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
+        elif broadcast_type == "audio":
+            file_id = context.user_data.get('media_file_id', '')
+            caption = context.user_data.get('broadcast_caption', '')
+            
+            await update.message.reply_audio(
+                audio=file_id,
+                caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
+    except Exception as e:
+        logger.error(f"Error preparing broadcast preview: {e}")
+        await update.message.reply_text(
+            "Failed to generate preview. Please try again or use /cancel to abort."
         )
-    elif broadcast_type == "video":
-        file_id = context.user_data.get('media_file_id', '')
-        caption = context.user_data.get('broadcast_caption', '')
-        
-        await update.message.reply_video(
-            video=file_id,
-            caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
-        )
-    elif broadcast_type == "document":
-        file_id = context.user_data.get('media_file_id', '')
-        caption = context.user_data.get('broadcast_caption', '')
-        
-        await update.message.reply_document(
-            document=file_id,
-            caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
-        )
-    elif broadcast_type == "audio":
-        file_id = context.user_data.get('media_file_id', '')
-        caption = context.user_data.get('broadcast_caption', '')
-        
-        await update.message.reply_audio(
-            audio=file_id,
-            caption=f"📣 *Broadcast Preview*\n\n{caption}\n\nThis content will be sent to all registered users. Are you sure?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
-        )
+        return BROADCAST_MEDIA
     
     return BROADCAST_CONFIRM
 
