@@ -254,14 +254,14 @@ Follow these steps to run the bot on your Android device using Termux:
 
 ## Commands
 
-### User Commands
+#### User Commands
 - `/start`: Get a welcome message and usage instructions.
 - `/help`: Display a list of available commands.
 - `/search <Movie Name>`: Check Availability of a movie by title (e.g., `/search Inception`).
 - `/get <Movie Name>`: Get This Movie.
 - `/get`: To Get Any Random Movie.
 
-### Admin Commands
+#### Admin Commands
 - `/addmovie <title>`: Add a new movie to the database.
 - `/listmovies`: List all available movies in the database.
 - `/deletemovie <id>`: Delete a movie by its ID.
