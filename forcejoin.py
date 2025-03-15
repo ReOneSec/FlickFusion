@@ -1,11 +1,10 @@
 import logging
-import asyncio
 from functools import wraps
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 from telegram.error import TelegramError, BadRequest
 from config import REQUIRED_CHANNELS, ADMIN_IDS
-from database import User
+from database import User, db
 import datetime
 
 logger = logging.getLogger(__name__)
@@ -64,12 +63,15 @@ async def check_user_membership(user_id: int, context: ContextTypes.DEFAULT_TYPE
     
     return results
 
-async def update_user_membership(user_id: int, context: ContextTypes.DEFAULT_TYPE) -> bool:
+async def update_user_membership(user_id: int, username: str, first_name: str, last_name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
     """
     Check membership and update the database.
     
     Args:
         user_id: The user ID to check
+        username: The username
+        first_name: The first name
+        last_name: The last name
         context: The context object
     
     Returns:
@@ -79,15 +81,37 @@ async def update_user_membership(user_id: int, context: ContextTypes.DEFAULT_TYP
     results = await check_user_membership(user_id, context)
     is_member = results['is_member_of_all']
     
-    # Update user in database
+    # Ensure database connection is open
+    if db.is_closed():
+        db.connect()
+    
     try:
-        user = User.get(User.user_id == user_id)
-        user.is_member = is_member
-        user.last_checked = datetime.datetime.now()
-        user.save()
-    except User.DoesNotExist:
-        # This shouldn't happen as the user should be created before this function is called
-        logger.error(f"User {user_id} not found in database during membership update")
+        # Update user in database
+        try:
+            user = User.get(User.user_id == user_id)
+            user.is_member = is_member
+            user.last_checked = datetime.datetime.now()
+            if username:
+                user.username = username
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+            user.save()
+        except User.DoesNotExist:
+            # Create new user record
+            User.create(
+                user_id=user_id,
+                username=username,
+                first_name=first_name or "User",
+                last_name=last_name,
+                is_member=is_member,
+                last_checked=datetime.datetime.now()
+            )
+    finally:
+        # Close the database connection
+        if not db.is_closed():
+            db.close()
     
     return is_member
 
@@ -110,36 +134,41 @@ async def force_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool
         
     now = datetime.datetime.now()
     
-    # Try to get user from database
+    # Ensure database connection is open
+    if db.is_closed():
+        db.connect()
+    
     try:
-        user = User.get(User.user_id == user_id)
-        
-        # If we checked recently and user is a member, return cached result
-        # Only recheck every 10 minutes to reduce API calls
-        if user.is_member and (now - user.last_checked).total_seconds() < 600:
-            return True
+        # Try to get user from database
+        try:
+            user = User.get(User.user_id == user_id)
             
-    except User.DoesNotExist:
-        # Create new user record
-        user = User.create(
-            user_id=user_id,
-            username=update.effective_user.username,
-            first_name=update.effective_user.first_name,
-            last_name=update.effective_user.last_name,
-            is_member=False,
-            last_checked=now
-        )
+            # If we checked recently and user is a member, return cached result
+            # Only recheck every 10 minutes to reduce API calls
+            if user.is_member and (now - user.last_checked).total_seconds() < 600:
+                return True
+                
+        except User.DoesNotExist:
+            # User will be created in update_user_membership
+            pass
+    finally:
+        # Close the database connection
+        if not db.is_closed():
+            db.close()
     
     # Check membership and update database
-    results = await check_user_membership(user_id, context)
-    is_member = results['is_member_of_all']
-    
-    # Update the database with the result
-    user.is_member = is_member
-    user.last_checked = now
-    user.save()
+    is_member = await update_user_membership(
+        user_id=user_id,
+        username=update.effective_user.username,
+        first_name=update.effective_user.first_name,
+        last_name=update.effective_user.last_name,
+        context=context
+    )
     
     if not is_member:
+        # Get detailed membership status
+        results = await check_user_membership(user_id, context)
+        
         # User is not a member of all channels, create join buttons
         buttons = []
         
@@ -162,12 +191,28 @@ async def force_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool
         channel_count = len([c for c in results['channels'].values() if not c.get('is_member', False)])
         channel_text = "channels" if channel_count > 1 else "channel"
         
-        await update.effective_message.reply_text(
-            f"⚠️ *You need to join our {channel_text} to use this bot!*\n\n"
-            f"Please join the required {channel_text} below, then click the 'I've Joined All Channels' button.",
-            reply_markup=InlineKeyboardMarkup(buttons),
-            parse_mode='Markdown'
-        )
+        # Create a branded message with FlickFusion style
+        try:
+            await update.effective_message.reply_photo(
+                photo="https://i.ibb.co/N6b3MVpj/1741892600514.jpg",
+                caption=(
+                    f"🎬 *FlickFusion Requires Channel Membership* 🍿\n\n"
+                    f"To access all the amazing movies and features, you need to join our {channel_text} first!\n\n"
+                    f"Please join the required {channel_text} below, then click the 'I've Joined All Channels' button."
+                ),
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            logger.error(f"Failed to send photo message: {e}")
+            # Fallback to text-only message
+            await update.effective_message.reply_text(
+                f"🎬 *FlickFusion Requires Channel Membership* 🍿\n\n"
+                f"To access all the amazing movies and features, you need to join our {channel_text} first!\n\n"
+                f"Please join the required {channel_text} below, then click the 'I've Joined All Channels' button.",
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode='Markdown'
+            )
         return False
     
     return True
@@ -200,35 +245,38 @@ async def check_membership_callback(update: Update, context: ContextTypes.DEFAUL
     user_id = update.effective_user.id
     
     # Check if user has joined all channels
-    results = await check_user_membership(user_id, context)
-    is_member = results['is_member_of_all']
-    
-    # Update the database
-    try:
-        user = User.get(User.user_id == user_id)
-        user.is_member = is_member
-        user.last_checked = datetime.datetime.now()
-        user.save()
-    except User.DoesNotExist:
-        # Create user if they don't exist
-        User.create(
-            user_id=user_id,
-            username=update.effective_user.username,
-            first_name=update.effective_user.first_name,
-            last_name=update.effective_user.last_name,
-            is_member=is_member,
-            last_checked=datetime.datetime.now()
-        )
+    is_member = await update_user_membership(
+        user_id=user_id,
+        username=update.effective_user.username,
+        first_name=update.effective_user.first_name,
+        last_name=update.effective_user.last_name,
+        context=context
+    )
     
     if is_member:
         # User has joined all channels
-        await query.edit_message_text(
-            "✅ Thank you for joining our channels!\n\n"
-            "You can now use all bot features. Type a movie name to request it, "
-            "or use /help to see available commands.",
-            parse_mode='Markdown'
-        )
+        try:
+            # Try to edit the caption if it's a photo message
+            await query.edit_message_caption(
+                caption="✅ *Thank you for joining our channels!*\n\n"
+                "You now have full access to FlickFusion's features. Type `/search [movie title]` to find movies, "
+                "or use `/help` to see all available commands.\n\n"
+                "Enjoy your movie experience! 🍿🎬",
+                parse_mode='Markdown'
+            )
+        except Exception:
+            # Fallback to editing text message
+            await query.edit_message_text(
+                "✅ *Thank you for joining our channels!*\n\n"
+                "You now have full access to FlickFusion's features. Type `/search [movie title]` to find movies, "
+                "or use `/help` to see all available commands.\n\n"
+                "Enjoy your movie experience! 🍿🎬",
+                parse_mode='Markdown'
+            )
     else:
+        # Get detailed membership status
+        results = await check_user_membership(user_id, context)
+        
         # User has not joined all channels
         buttons = []
         
@@ -256,13 +304,24 @@ async def check_membership_callback(update: Update, context: ContextTypes.DEFAUL
         
         missing_text = ", ".join(missing_channels)
         
-        await query.edit_message_text(
-            f"⚠️ *You still need to join the following channels:*\n"
-            f"• {missing_text}\n\n"
-            "Please join all required channels, then click the 'I've Joined All Channels' button.",
-            reply_markup=InlineKeyboardMarkup(buttons),
-            parse_mode='Markdown'
-        )
+        try:
+            # Try to edit the caption if it's a photo message
+            await query.edit_message_caption(
+                caption="⚠️ *You still need to join the following channels:*\n"
+                f"• {missing_text}\n\n"
+                "Please join all required channels, then click the 'I've Joined All Channels' button to access FlickFusion.",
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode='Markdown'
+            )
+        except Exception:
+            # Fallback to editing text message
+            await query.edit_message_text(
+                "⚠️ *You still need to join the following channels:*\n"
+                f"• {missing_text}\n\n"
+                "Please join all required channels, then click the 'I've Joined All Channels' button to access FlickFusion.",
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode='Markdown'
+            )
 
 async def membership_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show the user's membership status for all required channels."""
@@ -272,7 +331,7 @@ async def membership_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     results = await check_user_membership(user_id, context)
     
     # Create a status message
-    status_lines = ["📊 *Your Channel Membership Status*\n"]
+    status_lines = ["🎬 *FlickFusion Channel Membership Status*\n"]
     
     for channel in REQUIRED_CHANNELS:
         channel_id = channel['channel_id']
@@ -291,7 +350,7 @@ async def membership_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if results['is_member_of_all']:
         status_lines.append("✅ You have joined all required channels!")
     else:
-        status_lines.append("❌ You need to join all channels to use this bot.")
+        status_lines.append("❌ You need to join all channels to use FlickFusion.")
         
         # Add join buttons for channels the user hasn't joined
         buttons = []
