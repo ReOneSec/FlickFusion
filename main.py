@@ -1,14 +1,14 @@
 import logging
 import datetime
-import asyncio  # Add asyncio import
+import asyncio
+import time
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, ContextTypes, CallbackQueryHandler
 from config import BOT_TOKEN, ADMIN_IDS
-from database import initialize_db, User
+from database import db, initialize_db, User
 from adminhandlers import add_movie_handler, list_movies_handler, delete_movie_handler
 from userhandlers import handle_movie_request, search_movie, get_movie, get_movie_callback
 from forcejoin import require_membership, check_membership_callback, membership_status
-import time
 
 # Enable logging
 logging.basicConfig(
@@ -16,6 +16,9 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+# Add this global variable for uptime tracking
+START_TIME = time.time()
 
 @require_membership
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -70,7 +73,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• `/addmovie [title]` - Add a new movie\n"
         "• `/listmovies` - See all available movies\n"
         "• `/deletemovie [id]` - Remove a movie\n"
-        "• `/checkmemberships` - Manually check user memberships\n\n"
+        "• `/checkmemberships` - Manually check user memberships\n"
+        "• `/stat` - View detailed bot statistics\n\n"
         
         "🎯 *Pro Tip:* For the best results when searching, include the movie's year if you know it!\n"
         "Example: `/search Inception 2010`\n\n"
@@ -83,14 +87,18 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check_all_memberships(context: ContextTypes.DEFAULT_TYPE):
     """Periodic job to check membership status of all users."""
     from forcejoin import check_user_membership
+    from database import db, User
     
     logger.info("Running periodic membership check")
     
     # Get all users who were last checked more than 24 hours ago
     yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
     
-    # Ensure database connection is open
-    db = initialize_db()
+    # Check if connection is already open, and if not, open it
+    need_to_close = False
+    if db.is_closed():
+        db.connect()
+        need_to_close = True
     
     try:
         users = User.select().where(User.last_checked < yesterday)
@@ -123,8 +131,8 @@ async def check_all_memberships(context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Error during periodic membership check: {e}")
     finally:
-        # Close the database connection
-        if not db.is_closed():
+        # Only close the connection if we opened it
+        if need_to_close and not db.is_closed():
             db.close()
 
 async def check_memberships_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -146,7 +154,7 @@ async def check_memberships_command(update: Update, context: ContextTypes.DEFAUL
 @require_membership
 async def stat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Display bot statistics with different views for admins and regular users."""
-    from database import Movie, RequestLog, User
+    from database import db, Movie, RequestLog, User
     from peewee import fn
     import datetime
     
@@ -228,10 +236,8 @@ async def stat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Only close the connection if we opened it
         if need_to_close and not db.is_closed():
             db.close()
-# Add this global variable before your functions
-START_TIME = time.time()
 
-# Add this helper function
+# Helper function for uptime calculation
 def get_uptime():
     """Get the bot's uptime in a human-readable format."""
     uptime_seconds = int(time.time() - START_TIME)
@@ -252,7 +258,22 @@ def get_uptime():
     
     return " ".join(parts)
 
-# Add this async function for post_init
+# Error handler for the application
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle errors in the dispatcher."""
+    logger.error("Exception while handling an update:", exc_info=context.error)
+    
+    # Send a message to the user if it's a user-initiated update
+    if update and hasattr(update, 'effective_chat') and update.effective_chat:
+        try:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="Sorry, an error occurred while processing your request. Please try again later."
+            )
+        except Exception as e:
+            logger.error(f"Failed to send error message to user: {str(e)}")
+
+# Async function for post_init
 async def initialize_job_queue(app):
     """Async function for post_init that returns None but satisfies the awaitable requirement."""
     return None
@@ -260,11 +281,14 @@ async def initialize_job_queue(app):
 def main():
     """Start the bot."""
     # Initialize database
-    db = initialize_db()
+    initialize_db()
     
     try:
         # Create the Application with explicit JobQueue initialization using an async function
         application = Application.builder().token(BOT_TOKEN).post_init(initialize_job_queue).build()
+        
+        # Register the error handler
+        application.add_error_handler(error_handler)
         
         # Add handlers
         application.add_handler(CommandHandler("start", start))
@@ -272,6 +296,7 @@ def main():
         application.add_handler(CommandHandler("search", search_movie))
         application.add_handler(CommandHandler("get", get_movie))
         application.add_handler(CommandHandler("status", membership_status))
+        application.add_handler(CommandHandler("stat", stat_command))  # Add this line
         application.add_handler(CommandHandler("checkmemberships", check_memberships_command))
         
         # Add callback handlers
