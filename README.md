@@ -6,7 +6,7 @@
 - [Features](#features)
 - [Technical Requirements](#technical-requirements)
 - [Setup Instructions](#setup-instructions)
-- - [Simple Set-up](#simple-setup)
+  - [Simple Set-up](#simple-setup)
   - [Local Setup](#local-setup)
   - [Ubuntu VPS Setup](#ubuntu-vps-setup)
   - [Termux Setup (Android)](#termux-setup-android)
