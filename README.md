@@ -48,6 +48,9 @@ To run this bot, ensure you have the following set up:
 
 <details>
 <summary><b>Simple Setup [For pro Guy's only 😁]</b></summary>
+  
+  A minimal set-up instructions for pro Guy's. 
+  
 1. **Connect Your VPS**:
 2. **Clone Repository**
 3. **Install Requirements**
