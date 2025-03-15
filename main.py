@@ -1,5 +1,6 @@
 import logging
 import datetime
+import asyncio  # Add asyncio import
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, ContextTypes, CallbackQueryHandler
 from config import BOT_TOKEN, ADMIN_IDS
@@ -140,14 +141,19 @@ async def check_memberships_command(update: Update, context: ContextTypes.DEFAUL
     
     await update.message.reply_text("Membership check completed!")
 
+# Add this async function for post_init
+async def initialize_job_queue(app):
+    """Async function for post_init that returns None but satisfies the awaitable requirement."""
+    return None
+
 def main():
     """Start the bot."""
     # Initialize database
     db = initialize_db()
     
     try:
-        # Create the Application with explicit JobQueue initialization
-        application = Application.builder().token(BOT_TOKEN).post_init(lambda app: app.job_queue).build()
+        # Create the Application with explicit JobQueue initialization using an async function
+        application = Application.builder().token(BOT_TOKEN).post_init(initialize_job_queue).build()
         
         # Add handlers
         application.add_handler(CommandHandler("start", start))
