@@ -359,7 +359,7 @@ broadcast_handler = ConversationHandler(
         BROADCAST_MEDIA: [
             MessageHandler(filters._Photo, broadcast_media_received),
             MessageHandler(filters._Video, broadcast_media_received),
-            MessageHandler(filters._Document, broadcast_media_received),
+            MessageHandler(filters.Document, broadcast_media_received),
             MessageHandler(filters._Audio, broadcast_media_received)
         ],
         BROADCAST_CAPTION: [
