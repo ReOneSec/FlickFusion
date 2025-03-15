@@ -46,15 +46,18 @@ To run this bot, ensure you have the following set up:
 
 ## Setup Instructions
 
-### Simple Setup [For pro Guy's only 😁]
+<details>
+<summary><b>Simple Setup [For pro Guy's only 😁]</b></summary>
 1. **Connect Your VPS**:
 2. **Clone Repository**
 3. **Install Requirements**
 4. **Fill .env with your actual credentials**
 5. **Screen -S Flick** (For Running all time)
 6. **python main.py**
+</details>
 
-### Local Setup
+<details>
+<summary><b>Local Set-up</b></summary>
 
 Follow these steps to set up the bot on your local machine:
 
@@ -98,8 +101,10 @@ Follow these steps to set up the bot on your local machine:
    ```bash
    python main.py
    ```
+</details>
 
-## Ubuntu VPS Setup
+<details>
+<summary><b>Deploy on VPS [Ubuntu/Debian]</b></summary>
 
 Follow these steps to set up the bot on an Ubuntu VPS:
 
@@ -181,8 +186,10 @@ Follow these steps to set up the bot on an Ubuntu VPS:
    ```bash
    sudo systemctl status moviebot
    ```
+</details>
 
-### Termux Setup (Android)
+<details>
+<summary><b>Deploy in Termux</b></summary>
 
 Follow these steps to run the bot on your Android device using Termux:
 
@@ -246,6 +253,7 @@ Follow these steps to run the bot on your Android device using Termux:
    ```bash
    pkill -f "python main.py"
    ```
+</details>
 
 ## Usage
 
