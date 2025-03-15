@@ -282,7 +282,10 @@ After starting, you can interact with the bot in your Telegram group.
 
 ## Deployment Options
 
-### Running as a Background Service
+<details>
+<summary><b>Running as a Background Service</b></summary>
+
+Running as a Background Service
 
 #### Using Screen (Simple Approach)
 Screen is a simple tool that allows you to run processes in the background and reattach to them later.
@@ -305,11 +308,12 @@ To reattach to the screen session:
 ```bash
 screen -r moviebot
 ```
+</details>
 
-#### Using Systemd (Ubuntu/Debian Only)
-For a more robust solution on Ubuntu, use the systemd service as described in the Ubuntu VPS setup section.
+<details>
+<summary><b>Using Docker</b></summary>
 
-### Using Docker
+Using Docker
 
 If you prefer using Docker for deployment:
 
@@ -341,6 +345,7 @@ If you prefer using Docker for deployment:
    ```bash
    docker logs -f moviebot
    ```
+</details>
 
 ## Contributing
 
