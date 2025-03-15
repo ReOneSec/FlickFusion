@@ -6,7 +6,6 @@
 - [Features](#features)
 - [Technical Requirements](#technical-requirements)
 - [Setup Instructions](#setup-instructions)
-- [Usage](#usage)
 - [Commands](#commands)
 - [Deployment Options](#deployment-options)
 - [Contributing](#contributing)
