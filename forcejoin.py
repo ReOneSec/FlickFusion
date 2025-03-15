@@ -258,19 +258,23 @@ async def check_membership_callback(update: Update, context: ContextTypes.DEFAUL
         try:
             # Try to edit the caption if it's a photo message
             await query.edit_message_caption(
-                caption="✅ *Thank you for joining our channels!*\n\n"
-                "You now have full access to FlickFusion's features. Type `/search [movie title]` to find movies, "
-                "or use `/help` to see all available commands.\n\n"
-                "Enjoy your movie experience! 🍿🎬",
+                caption=""*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
+                "Hey there! I'm *FlickFusion*, your go-to bot for instant movie magic. 🪄 "
+                "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
+                "*Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥*\n\n"
+                "*Crafted with ❤️ by @ViperROX.*\n"
+                "Have questions? Just type /help or check your channel membership with /status!",
                 parse_mode='Markdown'
             )
         except Exception:
             # Fallback to editing text message
             await query.edit_message_text(
-                "✅ *Thank you for joining our channels!*\n\n"
-                "You now have full access to FlickFusion's features. Type `/search [movie title]` to find movies, "
-                "or use `/help` to see all available commands.\n\n"
-                "Enjoy your movie experience! 🍿🎬",
+                ""*🎬 Welcome to FlickFusion, Movie Lover! 🍿*\n\n"
+                "Hey there! I'm *FlickFusion*, your go-to bot for instant movie magic. 🪄 "
+                "Need a film? Just drop your request in the group, in this Format \"/search [Movie Name]\".\n\n"
+                "*Let's dive into the world of cinema. Sit back, grab popcorn, and enjoy! 🎥*\n\n"
+                "*Crafted with ❤️ by @ViperROX.*\n"
+                "Have questions? Just type /help or check your channel membership with /status!",
                 parse_mode='Markdown'
             )
     else:
