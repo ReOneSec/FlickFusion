@@ -54,6 +54,7 @@ To run this bot, ensure you have the following set up:
 4. **Fill .env with your actual credentials**
 5. **Screen -S Flick** (For Running all time)
 6. **python main.py**
+  
 </details>
 
 <details>
