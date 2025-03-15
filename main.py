@@ -302,6 +302,8 @@ def main():
         application.add_handler(CommandHandler("status", membership_status))
         application.add_handler(CommandHandler("stat", stat_command))
         application.add_handler(CommandHandler("checkmemberships", check_memberships_command))
+        application.add_handler(CommandHandler("checkmemberships", broadcast_handler))
+
         
         # Add the broadcast handler
         application.add_handler(broadcast_handler)
