@@ -8,6 +8,7 @@ from database import initialize_db, User
 from adminhandlers import add_movie_handler, list_movies_handler, delete_movie_handler
 from userhandlers import handle_movie_request, search_movie, get_movie, get_movie_callback
 from forcejoin import require_membership, check_membership_callback, membership_status
+import time
 
 # Enable logging
 logging.basicConfig(
@@ -140,6 +141,115 @@ async def check_memberships_command(update: Update, context: ContextTypes.DEFAUL
     await check_all_memberships(context)
     
     await update.message.reply_text("Membership check completed!")
+
+@require_membership
+async def stat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Display bot statistics with different views for admins and regular users."""
+    from database import Movie, RequestLog, User
+    from peewee import fn
+    import datetime
+    
+    # Check if this is an admin request (for detailed stats)
+    user_id = update.effective_user.id
+    is_admin = user_id in ADMIN_IDS
+    
+    try:
+        # Ensure database connection is open
+        need_to_close = False
+        if db.is_closed():
+            db.connect()
+            need_to_close = True
+            
+        # Basic statistics everyone can see
+        total_movies = Movie.select().count()
+        total_requests = RequestLog.select().count()
+        total_users = User.select().count()
+        
+        # Create statistics message
+        stats_message = [
+            "📊 *FlickFusion Bot Statistics* 📊\n",
+            f"🎬 *Total Movies:* {total_movies}",
+            f"🔍 *Total Requests:* {total_requests}",
+            f"👥 *Registered Users:* {total_users}"
+        ]
+        
+        # Add more detailed statistics for admins
+        if is_admin:
+            # Calculate active users in the last 30 days
+            thirty_days_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+            active_users = (RequestLog
+                          .select(RequestLog.user_id)
+                          .distinct()
+                          .where(RequestLog.request_time > thirty_days_ago)
+                          .count())
+            
+            # Get the top 5 most requested movies
+            top_movies = (Movie
+                          .select(Movie, fn.COUNT(RequestLog.id).alias('request_count'))
+                          .join(RequestLog)
+                          .group_by(Movie.id)
+                          .order_by(fn.COUNT(RequestLog.id).desc())
+                          .limit(5))
+            
+            # Get user membership statistics
+            member_users = User.select().where(User.is_member == True).count()
+            non_member_users = total_users - member_users
+            
+            # Add admin statistics to the message
+            stats_message.append("\n*Admin Statistics:*")
+            stats_message.append(f"👤 *Active Users (30 days):* {active_users}")
+            stats_message.append(f"✅ *Users in Channels:* {member_users}")
+            stats_message.append(f"❌ *Users Not in Channels:* {non_member_users}")
+            
+            # Add top movies section
+            if top_movies.count() > 0:
+                stats_message.append("\n*Top Requested Movies:*")
+                for i, movie in enumerate(top_movies, 1):
+                    year_str = f" ({movie.year})" if movie.year else ""
+                    stats_message.append(f"{i}. *{movie.title}*{year_str} - {movie.request_count} requests")
+            
+            # Add system statistics
+            stats_message.append("\n*System Statistics:*")
+            stats_message.append(f"⏱️ *Uptime:* {get_uptime()}")
+        
+        # Send the statistics message
+        await update.message.reply_text(
+            "\n".join(stats_message),
+            parse_mode='Markdown'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating statistics: {str(e)}")
+        await update.message.reply_text(
+            "Sorry, an error occurred while generating statistics. Please try again later."
+        )
+    finally:
+        # Only close the connection if we opened it
+        if need_to_close and not db.is_closed():
+            db.close()
+# Add this global variable before your functions
+START_TIME = time.time()
+
+# Add this helper function
+def get_uptime():
+    """Get the bot's uptime in a human-readable format."""
+    uptime_seconds = int(time.time() - START_TIME)
+    
+    days, remainder = divmod(uptime_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    parts = []
+    if days > 0:
+        parts.append(f"{days}d")
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if seconds > 0 or not parts:
+        parts.append(f"{seconds}s")
+    
+    return " ".join(parts)
 
 # Add this async function for post_init
 async def initialize_job_queue(app):
