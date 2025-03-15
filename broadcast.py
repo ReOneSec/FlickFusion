@@ -357,10 +357,10 @@ broadcast_handler = ConversationHandler(
         BROADCAST_TYPE: [CallbackQueryHandler(broadcast_type_callback, pattern=r'^broadcast_type_')],
         BROADCAST_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast_text_received)],
         BROADCAST_MEDIA: [
-            MessageHandler(filters._Photo, broadcast_media_received),
-            MessageHandler(filters._Video, broadcast_media_received),
-            MessageHandler(filters.Document, broadcast_media_received),
-            MessageHandler(filters._Audio, broadcast_media_received)
+            MessageHandler(filters._PHOTO, broadcast_media_received),
+            MessageHandler(filters._VIDEO, broadcast_media_received),
+            MessageHandler(filters.DOCUMENT, broadcast_media_received),
+            MessageHandler(filters._AUDIO, broadcast_media_received)
         ],
         BROADCAST_CAPTION: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast_caption_received),
