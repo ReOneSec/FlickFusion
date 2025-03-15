@@ -267,12 +267,15 @@ After starting, you can interact with the bot in your Telegram group.
 ### User Commands
 - `/start`: Get a welcome message and usage instructions.
 - `/help`: Display a list of available commands.
-- `/search <movie title>`: Request a movie by title (e.g., `/search Inception`).
+- `/search <Movie Name>`: Check Availability of a movie by title (e.g., `/search Inception`).
+- `/get <Movie Name>`: Get This Movie.
+- `/get`: To Get Any Random Movie.
 
 ### Admin Commands
 - `/addmovie <title>`: Add a new movie to the database.
 - `/listmovies`: List all available movies in the database.
 - `/deletemovie <id>`: Delete a movie by its ID.
+- `/cancel`: To cancel any Ongoing Process.
 
 ## Deployment Options
 
