@@ -6,6 +6,7 @@
 - [Features](#features)
 - [Technical Requirements](#technical-requirements)
 - [Setup Instructions](#setup-instructions)
+- - [Simple Set-up](#simple-setup)
   - [Local Setup](#local-setup)
   - [Ubuntu VPS Setup](#ubuntu-vps-setup)
   - [Termux Setup (Android)](#termux-setup-android)
@@ -45,7 +46,7 @@ To run this bot, ensure you have the following set up:
 
 ## Setup Instructions
 
-### Simple Set-up [For pro Guy's only 😁]
+### Simple Setup [For pro Guy's only 😁]
 1. **Connect Your VPS**:
 2. **Clone Repository**
 3. **Install Requirements**
