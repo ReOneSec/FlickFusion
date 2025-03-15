@@ -38,7 +38,7 @@ To run this bot, ensure you have the following set up:
    - `python-dotenv`
    - `psycopg2-binary` (optional, for PostgreSQL support)
 
-## Setup Instructions
+## Setup Instructions [Tap To View]
 
 <details>
 <summary><b>Simple Setup [For pro Guy's only 😁]</b></summary>
