@@ -9,6 +9,7 @@ from database import db, initialize_db, User
 from adminhandlers import add_movie_handler, list_movies_handler, delete_movie_handler
 from userhandlers import handle_movie_request, search_movie, get_movie, get_movie_callback
 from forcejoin import require_membership, check_membership_callback, membership_status
+from broadcast import broadcast_handler
 
 # Enable logging
 logging.basicConfig(
@@ -75,6 +76,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• `/deletemovie [id]` - Remove a movie\n"
         "• `/checkmemberships` - Manually check user memberships\n"
         "• `/stat` - View detailed bot statistics\n\n"
+        "• `/broadcast` - Send a message to all users\n\n"
         
         "🎯 *Pro Tip:* For the best results when searching, include the movie's year if you know it!\n"
         "Example: `/search Inception 2010`\n\n"
@@ -272,6 +274,8 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
             )
         except Exception as e:
             logger.error(f"Failed to send error message to user: {str(e)}")
+
+
 
 # Async function for post_init
 async def initialize_job_queue(app):
