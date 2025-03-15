@@ -66,7 +66,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "*For Admins:*\n"
         "• `/addmovie [title]` - Add a new movie\n"
         "• `/listmovies` - See all available movies\n"
-        "• `/deletemovie [id]` - Remove a movie\n\n"
+        "• `/deletemovie [id]` - Remove a movie\n"
+        "• `/checkmemberships` - Manually check user memberships\n\n"
         
         "🎯 *Pro Tip:* For the best results when searching, include the movie's year if you know it!\n"
         "Example: `/search Inception 2010`\n\n"
@@ -123,45 +124,71 @@ async def check_all_memberships(context: ContextTypes.DEFAULT_TYPE):
         if not db.is_closed():
             db.close()
 
+async def check_memberships_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Manual command to check all memberships (admin only)."""
+    user_id = update.effective_user.id
+    
+    # Only allow admins to run this command
+    if user_id not in ADMIN_IDS:
+        await update.message.reply_text("Sorry, only admins can use this command.")
+        return
+    
+    await update.message.reply_text("Starting membership check for all users. This may take some time...")
+    
+    # Run the check
+    await check_all_memberships(context)
+    
+    await update.message.reply_text("Membership check completed!")
+
 def main():
     """Start the bot."""
     # Initialize database
     db = initialize_db()
     
-    # Create the Application
-    application = Application.builder().token(BOT_TOKEN).build()
-    
-    # Add handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("search", search_movie))
-    application.add_handler(CommandHandler("get", get_movie))
-    application.add_handler(CommandHandler("status", membership_status))
-    
-    # Add callback handlers
-    application.add_handler(CallbackQueryHandler(get_movie_callback, pattern=r'^get_movie_'))
-    application.add_handler(CallbackQueryHandler(check_membership_callback, pattern=r'^check_membership$'))
-    
-    # Admin handlers
-    application.add_handler(add_movie_handler)
-    application.add_handler(list_movies_handler)
-    application.add_handler(delete_movie_handler)
-    
-    # Set up periodic membership check (every 24 hours)
-    job_queue = application.job_queue
-    job_queue.run_repeating(check_all_memberships, interval=86400, first=10)
-    
-    # User movie request handler - should be last to catch all messages
-    application.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, handle_movie_request
-    ))
-    
-    # Start the Bot
-    logger.info("Starting FlickFusion bot")
-    application.run_polling()
-    
-    # Close the database connection when done
-    db.close()
+    try:
+        # Create the Application with explicit JobQueue initialization
+        application = Application.builder().token(BOT_TOKEN).post_init(lambda app: app.job_queue).build()
+        
+        # Add handlers
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("help", help_command))
+        application.add_handler(CommandHandler("search", search_movie))
+        application.add_handler(CommandHandler("get", get_movie))
+        application.add_handler(CommandHandler("status", membership_status))
+        application.add_handler(CommandHandler("checkmemberships", check_memberships_command))
+        
+        # Add callback handlers
+        application.add_handler(CallbackQueryHandler(get_movie_callback, pattern=r'^get_movie_'))
+        application.add_handler(CallbackQueryHandler(check_membership_callback, pattern=r'^check_membership$'))
+        
+        # Admin handlers
+        application.add_handler(add_movie_handler)
+        application.add_handler(list_movies_handler)
+        application.add_handler(delete_movie_handler)
+        
+        # Set up periodic membership check with proper error handling
+        if hasattr(application, 'job_queue') and application.job_queue is not None:
+            application.job_queue.run_repeating(check_all_memberships, interval=86400, first=10)
+            logger.info("Scheduled periodic membership checks every 24 hours")
+        else:
+            logger.warning("JobQueue not available. Periodic membership checks will not run automatically.")
+            logger.info("Added /checkmemberships command for manual membership verification")
+        
+        # User movie request handler - should be last to catch all messages
+        application.add_handler(MessageHandler(
+            filters.TEXT & ~filters.COMMAND, handle_movie_request
+        ))
+        
+        # Start the Bot
+        logger.info("Starting FlickFusion bot")
+        application.run_polling()
+        
+    except Exception as e:
+        logger.error(f"Error starting bot: {e}")
+    finally:
+        # Close the database connection when done
+        if not db.is_closed():
+            db.close()
 
 if __name__ == '__main__':
     main()
