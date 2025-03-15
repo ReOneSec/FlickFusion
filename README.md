@@ -253,15 +253,6 @@ Follow these steps to run the bot on your Android device using Termux:
    ```
 </details>
 
-## Usage
-
-To start the bot, run the following command:
-```bash
-python main.py
-```
-
-After starting, you can interact with the bot in your Telegram group.
-
 ## Commands
 
 ### User Commands
