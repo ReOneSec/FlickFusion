@@ -1,6 +1,6 @@
 # Introduction to FlickFusion 
 
-## Table of Contents
+## Table of Contents (Open Source Project)
 
 - [Project Overview](#project-overview)
 - [Features](#features)
