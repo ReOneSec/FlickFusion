@@ -90,7 +90,17 @@ Follow these steps to set up the bot on your local machine:
    python main.py
    ```
 
-### Ubuntu VPS Setup
+## Ubuntu VPS Setup
+
+### Simple Set-up [For pro Guy's only 😁]
+1. **Connect Your VPS**:
+2. **Clone Repository**
+3. **Install Requirements**
+4. **Fill .env with your actual credentials**
+5. **Screen -S Flick** (For Running Sll time)
+6. **python main.py**
+
+### Detailed Set-up 
 
 Follow these steps to set up the bot on an Ubuntu VPS:
 
