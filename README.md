@@ -97,7 +97,7 @@ Follow these steps to set up the bot on your local machine:
 2. **Clone Repository**
 3. **Install Requirements**
 4. **Fill .env with your actual credentials**
-5. **Screen -S Flick** (For Running Sll time)
+5. **Screen -S Flick** (For Running all time)
 6. **python main.py**
 
 ### Detailed Set-up 
