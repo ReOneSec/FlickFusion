@@ -55,3 +55,15 @@ for i, channel in enumerate(REQUIRED_CHANNELS):
 # Validate configuration
 if not all([BOT_TOKEN, ADMIN_IDS, CHANNEL_ID, AUTH_GROUPS]):
     raise ValueError("Missing required environment variables. Check your .env file.")
+    
+    # Verification configuration
+MODIJI_API_TOKEN = os.getenv("MODIJI_API_TOKEN")
+if not MODIJI_API_TOKEN:
+    logger.error("MODIJI_API_TOKEN not found in environment variables!")
+
+VERIFICATION_SERVER_URL = os.getenv("VERIFICATION_SERVER_URL")
+if not VERIFICATION_SERVER_URL:
+    logger.warning("VERIFICATION_SERVER_URL not set, using default value")
+    VERIFICATION_SERVER_URL = "https://your-verification-server.com/verify"
+
+BOT_USERNAME = os.getenv("BOT_USERNAME", "FlickFusionBot")
