@@ -248,7 +248,7 @@ def require_membership(func):
                 return None
 
             keyboard = [
-                [InlineKeyboardButton("🔐 Verify Account", url=verification_link)]
+                [InlineKeyboardButton("🔐 Verify Account (View Ad)", url=verification_link)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
@@ -257,7 +257,8 @@ def require_membership(func):
                     photo="https://i.ibb.co/N6b3MVpj/1741892600514.jpg",
                     caption=(
                         "🔐 *FlickFusion Verification Required* 🔐\n\n"
-                        "To access all features, please verify your account by clicking the button below.\n"
+                        "To access all features, please click the button below to verify your account.\n\n"
+                        "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
                         "This verification will be valid for 24 hours."
                     ),
                     reply_markup=reply_markup,
@@ -268,7 +269,8 @@ def require_membership(func):
                 # Fallback to text-only message
                 await update.effective_message.reply_text(
                     "🔐 *FlickFusion Verification Required* 🔐\n\n"
-                    "To access all features, please verify your account by clicking the button below.\n"
+                    "To access all features, please click the button below to verify your account.\n\n"
+                    "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
                     "This verification will be valid for 24 hours.",
                     reply_markup=reply_markup,
                     parse_mode='Markdown'
@@ -279,6 +281,7 @@ def require_membership(func):
         return await func(update, context, *args, **kwargs)
     
     return wrapper
+
 
 async def check_membership_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the 'I've Joined All Channels' button click."""
