@@ -6,6 +6,8 @@ from telegram.error import TelegramError, BadRequest
 from config import REQUIRED_CHANNELS, ADMIN_IDS
 from database import User, db
 import datetime
+from verification import is_user_verified, create_verification_link
+
 
 logger = logging.getLogger(__name__)
 
