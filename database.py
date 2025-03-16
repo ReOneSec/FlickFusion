@@ -1,3 +1,4 @@
+
 from peewee import *
 from config import DATABASE_URL
 import datetime
@@ -54,10 +55,6 @@ class User(BaseModel):
     is_member = BooleanField(default=False)
     last_checked = DateTimeField(default=datetime.datetime.now)
     joined_date = DateTimeField(default=datetime.datetime.now)
-  # New fields for token verification
-    verification_token = CharField(null=True)
-    token_created_at = DateTimeField(null=True)
-    verified_until = DateTimeField(null=True)
 
 def initialize_db():
     """Initialize the database and create tables if they don't exist."""
