@@ -271,11 +271,12 @@ async def verify_token_callback(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
 async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle the /verify command"""
+    """Handle the /verify command to initiate ad-based verification."""
     user_id = update.effective_user.id
     
     # Check if already verified
     status = get_verification_status(user_id)
+    
     if status["is_verified"]:
         # Already verified
         if status["admin_override"]:
@@ -296,7 +297,7 @@ async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         return
     
-    # Generate verification link
+    # Generate verification link using ModiJiURL
     verification_link, _ = await create_verification_link(user_id)
     
     if not verification_link:
@@ -306,10 +307,10 @@ async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
         return
-    
+
     # Create inline keyboard with verification link
     keyboard = [
-        [InlineKeyboardButton("🔐 Verify Account", url=verification_link)]
+        [InlineKeyboardButton("🔐 Verify Account (View Ad)", url=verification_link)]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
