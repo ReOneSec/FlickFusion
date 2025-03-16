@@ -6,7 +6,7 @@ import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from database import db, User
-from config import ADMIN_IDS, MODIJI_API_TOKEN, VERIFICATION_SERVER_URL, BOT_USERNAME
+from config import ADMIN_IDS, MODIJI_API_TOKEN, BOT_USERNAME
 
 # Set up logging
 logging.basicConfig(
@@ -31,13 +31,11 @@ async def create_verification_link(user_id):
     token = generate_token()
     
     # Create the destination URL with token and user_id
-    destination_url = f"{VERIFICATION_SERVER_URL}?token={token}&user_id={user_id}"
-    
-    # Create a custom alias (optional)
-    alias = f"verify_{user_id}_{int(datetime.datetime.now().timestamp())}"
+    # This URL will direct back to the bot with a start parameter
+    destination_url = f"https://t.me/{BOT_USERNAME}?start=verify_{token}_{user_id}"
     
     # Call ModiJiURL API
-    api_url = f"https://api.modijiurl.com/api?api={MODIJI_API_TOKEN}&url={destination_url}&alias={alias}"
+    api_url = f"https://api.modijiurl.com/api?api={MODIJI_API_TOKEN}&url={destination_url}"
     
     try:
         response = requests.get(api_url)
@@ -118,7 +116,7 @@ def is_user_verified(user_id):
         if need_to_close and not db.is_closed():
             db.close()
 
-def mark_user_verified(user_id, token):
+def verify_token(user_id, token):
     """Mark a user as verified if the token matches"""
     try:
         # Ensure database connection is open
@@ -265,9 +263,9 @@ async def verify_token_callback(update: Update, context: ContextTypes.DEFAULT_TY
     
     await query.edit_message_text(
         "🔐 *Account Verification* 🔐\n\n"
-        "Please click the button below to verify your account.\n"
-        "This verification will be valid for 24 hours.\n\n"
-        "Note: After verification, return to this chat and use /start to continue.",
+        "Please click the button below to verify your account.\n\n"
+        "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
+        "This verification will be valid for 24 hours.",
         parse_mode='Markdown',
         reply_markup=reply_markup
     )
@@ -320,9 +318,9 @@ async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             photo="https://i.ibb.co/N6b3MVpj/1741892600514.jpg",
             caption=(
                 "🔐 *FlickFusion Verification Required* 🔐\n\n"
-                "To access all features, please verify your account by clicking the button below.\n"
-                "This verification will be valid for 24 hours.\n\n"
-                "After verification, return to this chat and use /start to continue."
+                "To access all features, please click the button below to verify your account.\n\n"
+                "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
+                "This verification will be valid for 24 hours."
             ),
             parse_mode='Markdown',
             reply_markup=reply_markup
@@ -332,9 +330,9 @@ async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Fallback to text-only message
         await update.message.reply_text(
             "🔐 *FlickFusion Verification Required* 🔐\n\n"
-            "To access all features, please verify your account by clicking the button below.\n"
-            "This verification will be valid for 24 hours.\n\n"
-            "After verification, return to this chat and use /start to continue.",
+            "To access all features, please click the button below to verify your account.\n\n"
+            "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
+            "This verification will be valid for 24 hours.",
             parse_mode='Markdown',
             reply_markup=reply_markup
         )
@@ -372,7 +370,7 @@ async def verification_status_command(update: Update, context: ContextTypes.DEFA
         
         await update.message.reply_text(
             "❌ *Verification Status: Required* ❌\n\n"
-            "You need to verify your account to use this bot.\n"
+            "You need to view an ad to verify your account and use this bot.\n"
             "Please click the button below to start the verification process.",
             parse_mode='Markdown',
             reply_markup=reply_markup
