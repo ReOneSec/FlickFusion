@@ -6,8 +6,6 @@ from telegram.error import TelegramError, BadRequest
 from config import REQUIRED_CHANNELS, ADMIN_IDS
 from database import User, db
 import datetime
-from verification import is_user_verified, create_verification_link
-
 
 logger = logging.getLogger(__name__)
 
@@ -220,68 +218,24 @@ async def force_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool
     return True
 
 def require_membership(func):
-    """Decorator to require channel membership and verification before executing a command."""
+    """Decorator to require channel membership before executing a command."""
     @wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        # Skip membership check for admins
         user_id = update.effective_user.id
-        
-        # Skip membership and verification check for admins
         if user_id in ADMIN_IDS:
             return await func(update, context, *args, **kwargs)
         
-        # 1. Check channel membership
+        # Check membership
         is_member = await force_join(update, context)
-        if not is_member:
-            # force_join has already sent the join message
-            return None
         
-        # 2. Check verification status
-        if not is_user_verified(user_id):
-            # User needs to verify
-            verification_link, _ = await create_verification_link(user_id)
-            if not verification_link:
-                await update.effective_message.reply_text(
-                    "❌ *Verification Error* ❌\n\n"
-                    "Failed to generate verification link. Please try again later.",
-                    parse_mode='Markdown'
-                )
-                return None
-
-            keyboard = [
-                [InlineKeyboardButton("🔐 Verify Account (View Ad)", url=verification_link)]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            try:
-                await update.effective_message.reply_photo(
-                    photo="https://i.ibb.co/N6b3MVpj/1741892600514.jpg",
-                    caption=(
-                        "🔐 *FlickFusion Verification Required* 🔐\n\n"
-                        "To access all features, please click the button below to verify your account.\n\n"
-                        "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
-                        "This verification will be valid for 24 hours."
-                    ),
-                    reply_markup=reply_markup,
-                    parse_mode='Markdown'
-                )
-            except Exception as e:
-                logger.error(f"Failed to send photo message: {e}")
-                # Fallback to text-only message
-                await update.effective_message.reply_text(
-                    "🔐 *FlickFusion Verification Required* 🔐\n\n"
-                    "To access all features, please click the button below to verify your account.\n\n"
-                    "You'll be shown an advertisement. After viewing the ad, you'll be redirected back to FlickFusion.\n"
-                    "This verification will be valid for 24 hours.",
-                    reply_markup=reply_markup,
-                    parse_mode='Markdown'
-                )
-            return None
-            
-        # If both membership and verification checks pass, execute the function
-        return await func(update, context, *args, **kwargs)
+        # Only proceed if user is a member
+        if is_member:
+            return await func(update, context, *args, **kwargs)
+        # If not a member, force_join has already sent the join message
+        return None
     
     return wrapper
-
 
 async def check_membership_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the 'I've Joined All Channels' button click."""
