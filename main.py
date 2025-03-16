@@ -12,6 +12,8 @@ from forcejoin import require_membership, check_membership_callback, membership_
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 import re
+from verification import verify_token
+import logging
 
 
 # Enable logging
@@ -24,12 +26,63 @@ logger = logging.getLogger(__name__)
 # Add this global variable for uptime tracking
 START_TIME = time.time()
 
+
 @require_membership
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a welcome message with image when the command /start is issued."""
     chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
     
-    # Send welcome image with caption
+    # Check if this is a verification callback
+    if context.args and len(context.args) > 0:
+        start_arg = context.args[0]
+        
+        # Check if it's a verification callback
+        if start_arg.startswith('verify_'):
+            try:
+                # Parse the verification data
+                parts = start_arg.split('_', 2)
+                if len(parts) >= 3:
+                    token = parts[1]
+                    callback_user_id = int(parts[2])
+                    
+                    # Verify that the callback is for this user
+                    if callback_user_id != user_id:
+                        await update.message.reply_text(
+                            "❌ *Verification Error* ❌\n\n"
+                            "This verification link is for another user.",
+                            parse_mode='Markdown'
+                        )
+                        return
+                    
+                    # Verify the token
+                    if verify_token(user_id, token):
+                        await update.message.reply_text(
+                            "✅ *Verification Successful* ✅\n\n"
+                            "Thank you for viewing the ad and verifying your account!\n"
+                            "You can now use all FlickFusion features for the next 24 hours.",
+                            parse_mode='Markdown'
+                        )
+                        return
+                    else:
+                        await update.message.reply_text(
+                            "❌ *Verification Failed* ❌\n\n"
+                            "Invalid or expired verification token.\n"
+                            "Please try verifying again using /verify command.",
+                            parse_mode='Markdown'
+                        )
+                        return
+            except Exception as e:
+                logger.error(f"Error processing verification callback: {e}")
+                await update.message.reply_text(
+                    "❌ *Verification Error* ❌\n\n"
+                    "An error occurred during verification.\n"
+                    "Please try again using /verify command.",
+                    parse_mode='Markdown'
+                )
+                return
+    
+    # Regular start command (not a verification callback)
     try:
         await context.bot.send_photo(
             chat_id=chat_id,
@@ -57,6 +110,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Have questions? Just type /help or check your channel membership with /status!",
             parse_mode='Markdown'
         )
+
 
 @require_membership
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
