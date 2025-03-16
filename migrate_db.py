@@ -24,7 +24,7 @@ def migrate_db():
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_schema = 'public'
-                AND table_name = 'users'
+                AND table_name = 'user'
             );
         """)
         table_exists = cursor.fetchone()[0]
@@ -40,7 +40,7 @@ def migrate_db():
         cursor = db.execute_sql("""
             SELECT column_name 
             FROM information_schema.columns 
-            WHERE table_schema = 'public' AND table_name = 'users'
+            WHERE table_schema = 'public' AND table_name = 'user'
         """)
         existing_columns = [column[0].lower() for column in cursor.fetchall()]
         
