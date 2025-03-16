@@ -665,6 +665,11 @@ def main():
         application.add_handler(CommandHandler("stat", stat_command))
         application.add_handler(CommandHandler("checkmemberships", check_memberships_command))
         
+        # Add verification handlers
+        application.add_handler(CommandHandler("verify", verify_command))
+        application.add_handler(CommandHandler("verification", verification_status_command))
+        application.add_handler(CallbackQueryHandler(verify_token_callback, pattern=r'^verify_token$'))
+        
         # Add broadcast handlers
         application.add_handler(CommandHandler("broadcast", broadcast_command))
         application.add_handler(CallbackQueryHandler(broadcast_callback, pattern=r'^broadcast_'))
